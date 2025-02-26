@@ -4,3 +4,4 @@ pandas
 nltk
 python-docx
 speechrecognition
+pyaudio
