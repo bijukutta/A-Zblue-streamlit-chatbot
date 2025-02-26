@@ -1,32 +1,20 @@
 import nltk
 import streamlit as st
 import speech_recognition as sr
-import pyttsx3
 from nltk.tokenize import word_tokenize
 from docx import Document
 import pandas as pd
-import threading
+from gtts import gTTS
+import os
 
 # Ensure NLTK data is downloaded
 nltk.download('punkt')
 
-# Initialize text-to-speech engine
-engine = pyttsx3.init()
-engine.setProperty('rate', 150)  # Adjust speaking speed
-
-# File paths for images
-mic_icon = r"C:\Users\User\Documents\ChatbotProject\Image\mic_button.png"  # Click to Speak
-listening_icon = r"C:\Users\User\Documents\ChatbotProject\Image\listening.gif"  # Listening animation
-bot_icon = r"C:\Users\User\Documents\ChatbotProject\Image\bot_icon.png"  # Bot avatar
-
 # Function to convert text to speech
 def speak(text):
-    def run_speech():
-        engine = pyttsx3.init()
-        engine.say(text)
-        engine.runAndWait()
-    
-    threading.Thread(target=run_speech, daemon=True).start()
+    tts = gTTS(text=text, lang="en")
+    tts.save("output.mp3")
+    st.audio("output.mp3", format="audio/mp3")
 
 # Function to read DOCX and extract text
 def read_docx(file):
@@ -77,7 +65,6 @@ def authenticate_user(username, password, excel_file="users.xlsx"):
 def recognize_speech():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        #st.image(listening_icon, caption="🎤 Listening... Speak Now!", use_column_width=True)  # Listening GIF
         try:
             audio = recognizer.listen(source, timeout=5)
             return recognizer.recognize_google(audio)
@@ -114,42 +101,30 @@ else:
     
     if uploaded_file:
         st.success(f"📄 File uploaded successfully: {uploaded_file.name}")
-
-        # Read document content
         doc_text = read_docx(uploaded_file)
-
-        # Chatbot interaction
         st.subheader("💬 Ask Finmantra Bot About the Document")
 
-        # **Voice Input Button**
+        # Voice Input Button
         st.markdown("### 🎙️ Use Voice Command")
-        col1, col2, col3 = st.columns([1, 3, 1])
-        with col2:
-            if st.button("Click to Speak 🎤"):
-               # st.image(mic_icon, caption="🎤 Speak Now", use_column_width=False, width=50)  # Mic Button
-                user_input = recognize_speech()
-                if user_input:
-                    st.write(f"**You Said:** {user_input}")  
+        if st.button("Click to Speak 🎤"):
+            user_input = recognize_speech()
+            if user_input:
+                st.write(f"**You Said:** {user_input}")
 
-        # **Text Input Field**
+        # Text Input Field
         user_text_input = st.text_input("Or type your query here:", key="text_input")
-
-        # **Process User Input (Either from Voice or Text)**
         final_input = user_text_input if user_text_input else user_input if 'user_input' in locals() else None
 
         if final_input:
             st.write(f"**You:** {final_input}")
-
-            # **Process the Query**
+            
             if final_input.lower() == "bye":
-             #   st.image(bot_icon, width=50)
                 st.write("🤖 Finmantra Bot: Goodbye! Have a great day! 😊")
                 speak("Goodbye! Have a great day!")
             else:
                 greeting_response = handle_greetings(final_input)
                 if greeting_response:
-                    #st.image(bot_icon, width=50)
-                    st.write(f"🤖 FinMantra Bot : {greeting_response}")
+                    st.write(f"🤖 FinMantra Bot: {greeting_response}")
                     speak(greeting_response)
                 else:
                     search_words = final_input.split()
@@ -157,14 +132,11 @@ else:
                         paragraphs = search_paragraphs(doc_text, search_words)
                         if paragraphs:
                             response_text = "Here's what I found:\n" + "\n".join(paragraphs[:3])
-                        #    st.image(bot_icon, width=50)
                             st.write(f"🤖 FinMantra Bot: {response_text}")
                             speak(response_text)
                         else:
-                         #   st.image(bot_icon, width=50)
                             st.write("🤖 FinMantra Bot: I couldn't find any matching paragraph.")
                             speak("I couldn't find any matching paragraph.")
                     else:
-                       # st.image(bot_icon, width=50)
                         st.write("🤖 FinMantra Bot: Please provide at least two words to search for.")
                         speak("Please provide at least two words to search for.")
