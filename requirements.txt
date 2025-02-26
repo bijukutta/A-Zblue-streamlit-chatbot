@@ -1,0 +1,7 @@
+nltk
+streamlit
+speechrecognition
+pyttsx3
+python-docx
+pandas
+openpyxl
