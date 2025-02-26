@@ -1,7 +1,6 @@
-nltk
 streamlit
-speechrecognition
-pyttsx3
-python-docx
+gtts
 pandas
-openpyxl
+nltk
+python-docx
+speechrecognition
